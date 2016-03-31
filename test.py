@@ -1,4 +1,5 @@
 import sys
+import datetime
 	
 from PyQt4 import QtCore
 from PyQt4 import QtGui
@@ -17,7 +18,11 @@ class MyForm(QtGui.QMainWindow):
         self.connect(timer, QtCore.SIGNAL("timeout()"), self.updTimer)
         timer.start(1000)
 
-        self.logFile = open("time-manager-log.txt", "a")
+        curdate = datetime.date.today().isoformat().split('-')
+        year = str(int(curdate[0]) % 100)
+        curdate = year + "." + curdate[1] + "." + curdate[2]
+        self.logFile = open(curdate+"-TM-log.txt", "a")
+        #self.logFile = open("kek.txt", "a")
 
     def updTimer(self):
         minutes = str(self.timerValue//60)
@@ -29,18 +34,22 @@ class MyForm(QtGui.QMainWindow):
 
 
     def logString(self):
+        curtime = datetime.datetime.now().time()
+        when = str(curtime.hour) + ":" + str(curtime.minute)
         activity = self.ui.curActView.toPlainText()
         timeSpent = str(self.timerValue)
         humanReadable = self.ui.curActView.toPlainText() + " for " + \
                                str(self.timerValue//60) + " minutes " + \
                                str(self.timerValue % 60) + " seconds"
-        resString = humanReadable + "|" + activity + "|" + timeSpent + "\n"
+        resString = when + "|" + humanReadable + "|" + activity + \
+                    "|" + timeSpent + "\n"
         return resString
 
     def changeActivity(self):
     	# Write to logs
         if self.ui.curActView.toPlainText() != "":
             self.logFile.write(self.logString())
+            self.logFile.flush()
 
     	# Reset timer
         self.timerValue = 0
