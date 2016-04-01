@@ -34,14 +34,12 @@ class MyForm(QtGui.QMainWindow):
 
 
     def logString(self):
-        curtime = datetime.datetime.now().time()
-        when = str(curtime.hour) + ":" + str(curtime.minute)
         activity = self.ui.curActView.toPlainText()
         timeSpent = str(self.timerValue)
         humanReadable = self.ui.curActView.toPlainText() + " for " + \
                                str(self.timerValue//60) + " minutes " + \
                                str(self.timerValue % 60) + " seconds"
-        resString = when + "|" + humanReadable + "|" + activity + \
+        resString =  humanReadable + "|" + activity + \
                     "|" + timeSpent + "\n"
         return resString
 
@@ -54,9 +52,19 @@ class MyForm(QtGui.QMainWindow):
     	# Reset timer
         self.timerValue = 0
 
-    	# Display new activity
+        # Display new activity
         self.ui.curActView.setText(self.ui.newActEdit.text())
         self.ui.newActEdit.setText("")
+
+        #Write the start time of new activity to log
+        if self.ui.curActView.toPlainText() != "":
+            curtime = datetime.datetime.now().time()
+            minutes = str(curtime.minute)
+            if len(minutes) == 1:
+                minutes = "0" + minutes
+            when = str(curtime.hour) + ":" + minutes
+            self.logFile.write(when+"|");
+            self.logFile.flush()
 
     def closeEvent(self, event):
         self.changeActivity()
