@@ -1,11 +1,13 @@
 from collections import defaultdict
+import sys
 
-with open("time-manager-log.txt") as f:
+with open(sys.argv[1]) as f:
 	curline = f.readline()
 	activities = defaultdict(int)
 	while curline != "":
 		parts = curline.split('|')
-		activities[parts[1]] += int(parts[2])
+		#print(parts)
+		activities[parts[2]] += int(parts[3])
 		#print(curline, "###")
 		curline = f.readline()
 
