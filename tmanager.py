@@ -21,6 +21,38 @@ class keyEnterReceiver(QtCore.QObject):
             return QtCore.QObject.eventFilter(obj, event);
 #        return False
 '''
+# Return list [seconds, minutes, hours] from 'time' in seconds
+def disassembleTime(time, addZeros=True):
+    base = [60,60]
+    res = []
+    for b in base:
+        res.append(str(time % b))
+        if addZeros and len(res[-1]) == 1:
+            res[-1] = "0" + res[-1]
+        time = time // b
+
+    res.append(str(time))
+    if addZeros and len(res[-1]) == 1:
+        res[-1] = "0" + res[-1]
+
+    return res
+
+class Plan:
+    total = 0
+    def __init__(self, plan):
+        self.activity = plan[0]
+        self.desiredTime = int(plan[1])
+        self.completedTime = int(plan[2])
+    def getDesc(self):
+        compTimeL = disassembleTime(self.completedTime, False)
+        desTimeL = disassembleTime(self.desiredTime, False)
+        return "({0}h{1}m/{2}h{3}m) {4}".format(
+                    compTimeL[2],
+                    compTimeL[1],
+                    desTimeL[2],
+                    desTimeL[1],
+                    self.activity)
+
 
 class MyForm(QtGui.QMainWindow):
     def __init__(self, parent=None):
@@ -30,26 +62,87 @@ class MyForm(QtGui.QMainWindow):
 
         self.ui.chActButton.clicked.connect(self.manualActivity)
         self.ui.pauseButton.clicked.connect(self.setPause)
+        self.ui.planAddButton.clicked.connect(self.onClickAddPlan)
+        self.ui.planDelButton.clicked.connect(self.onClickDelPlan)
 
         self.ui.suggestionList.itemClicked.connect(self.suggestedActivity)
 
-        self.timerValue = 0
-        timer = QtCore.QTimer(self)
-        self.connect(timer, QtCore.SIGNAL("timeout()"), self.timerTick)
-        timer.start(1000)
+        self.initTimer()
+        self.initLog()
+        self.readPlans()
 
+        self.pTimerValue = PAUSE_DURATION
+        self.paused = False
+
+    def onClickDelPlan(self):
+        delText = self.ui.plansList.selectedItems()[0].text()
+        for plan in self.plans:
+            if plan.getDesc() == delText:
+                self.plans.remove(plan)
+                Plan.total -= plan.desiredTime
+                self.ui.hoursPlannedLabel.setText(str(Plan.total // 3600))
+                activity = plan.activity
+                break
+        for i in range(self.ui.suggestionList.count()):
+            if self.ui.suggestionList.item(i).text() == activity:
+                self.ui.suggestionList.takeItem(i)
+                break
+        for i in range(self.ui.plansList.count()):
+            if self.ui.plansList.item(i).text() == delText:
+                self.ui.plansList.takeItem(i)
+                break
+
+         
+
+    def onClickAddPlan(self):
+        self.addPlan([self.ui.newPlanEdit.text(), 
+                        self.ui.minutesEdit.value()*60 + 
+                                self.ui.hoursEdit.value()*3600,
+                        0])
+        self.ui.newPlanEdit.setText("")
+        self.ui.minutesEdit.setValue(0)
+        self.ui.hoursEdit.setValue(0)
+
+    def addPlan(self, planInfo):
+        newPlan = Plan(planInfo)
+
+        Plan.total += newPlan.desiredTime
+        self.ui.hoursPlannedLabel.setText(str(Plan.total // 3600))
+
+        self.plans.append(newPlan)
+        planDesc = newPlan.getDesc()
+        self.ui.plansList.addItem(planDesc)
+        self.ui.suggestionList.addItem(newPlan.activity)
+
+    def readPlans(self):
+        planfile = open("TM-data", "r")
+        curline = planfile.readline()
+        self.plans = []
+        while curline != "":
+            self.addPlan(curline.split('|'))
+            curline = planfile.readline()
+
+    def savePlans(self):
+        planfile = open("TM-data", "w")
+        for plan in self.plans:
+            planfile.write("{0}|{1}|{2}\n".format(plan.activity,
+                                                plan.desiredTime,
+                                                plan.completedTime))
+        planfile.close()
+
+    def initLog(self):
         curdate = datetime.date.today().isoformat().split('-')
         year = str(int(curdate[0]) % 100)
 
         # TODO: "format".format()
         curdate = year + "." + curdate[1] + "." + curdate[2]
         self.logFile = open(curdate+"-TM-log.txt", "a")
-        #self.logFile = open("kek.txt", "a")
 
-        self.pTimerValue = PAUSE_DURATION
-        self.paused = False
-
-        self.ui.label.setText("oh heheheh")
+    def initTimer(self):
+        self.timerValue = 0
+        timer = QtCore.QTimer(self)
+        self.connect(timer, QtCore.SIGNAL("timeout()"), self.timerTick)
+        timer.start(1000)
 
 
     def suggestedActivity(self, item):
@@ -58,18 +151,6 @@ class MyForm(QtGui.QMainWindow):
     def setPause(self):
         self.paused = True
 
-    # Return list [seconds, minutes, hours, days] from 'time' in seconds
-    def disassembleTime(self, time):
-        base = [60,60,24]
-        res = []
-        for b in base:
-            res.append(str(time % b))
-            if len(res[-1]) == 1:
-                res[-1] = "0" + res[-1]
-            time = time // b
-        res.append(time)
-        return res
-
     def timerTick(self):
         if self.pTimerValue == 0:
             self.paused = False
@@ -77,11 +158,11 @@ class MyForm(QtGui.QMainWindow):
 
         if not self.paused:
             #print("mek")
-            timeL = self.disassembleTime(self.timerValue)
+            timeL = disassembleTime(self.timerValue)
             self.timerValue += 1
         else:
            # print("fek")
-            timeL = self.disassembleTime(self.pTimerValue)
+            timeL = disassembleTime(self.pTimerValue)
             self.pTimerValue -= 1
 
       #  print(self.timerValue)
@@ -90,18 +171,31 @@ class MyForm(QtGui.QMainWindow):
         else:
             self.ui.timerView.setText(timeL[2] + ":" + timeL[1] + 
                                       ":" + timeL[0])
-        self.ui.timerView.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
+
+        self.ui.timerView.setAlignment(QtCore.Qt.AlignRight | 
+                                            QtCore.Qt.AlignVCenter)
 
 
-    def logString(self):
+    def logActivity(self):
         activity = self.ui.curActView.toPlainText()
         timeSpent = str(self.timerValue)
+
+        for plan in self.plans:
+            if activity == plan.activity:
+                qitem = self.ui.plansList.findItems(plan.getDesc(),
+                    QtCore.Qt.MatchExactly)[0]
+                plan.completedTime += int(timeSpent)
+                qitem.setText(plan.getDesc())
+                break
+
         humanReadable = self.ui.curActView.toPlainText() + " for " + \
                                str(self.timerValue // 60) + " minutes " + \
                                str(self.timerValue % 60) + " seconds"
         resString =  humanReadable + "|" + activity + \
                     "|" + timeSpent + "\n"
-        return resString
+        self.logFile.write(resString)
+        self.logFile.flush()
+
 
     def manualActivity(self):
         self.changeActivity(self.ui.newActEdit.text())
@@ -110,8 +204,7 @@ class MyForm(QtGui.QMainWindow):
     def changeActivity(self, newAct):
     	# Write to logs
         if self.ui.curActView.toPlainText() != "":
-            self.logFile.write(self.logString())
-            self.logFile.flush()
+            self.logActivity()
 
     	# Reset timer
         self.timerValue = 0
@@ -133,6 +226,7 @@ class MyForm(QtGui.QMainWindow):
 
     def closeEvent(self, event):
         self.changeActivity("")
+        self.savePlans()
         event.accept()
 
 
