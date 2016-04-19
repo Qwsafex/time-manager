@@ -1,9 +1,11 @@
 import sys
 import datetime
-	
+from collections import defaultdict
+
 from PyQt4 import QtCore
 from PyQt4 import QtGui
 from test1gui import Ui_MainWindow
+import collector
 
 PAUSE_DURATION = 120
 
@@ -21,9 +23,11 @@ class keyEnterReceiver(QtCore.QObject):
             return QtCore.QObject.eventFilter(obj, event);
 #        return False
 '''
+
+
 # Return list [seconds, minutes, hours] from 'time' in seconds
 def disassembleTime(time, addZeros=True):
-    base = [60,60]
+    base = [60, 60]
     res = []
     for b in base:
         res.append(str(time % b))
@@ -37,12 +41,15 @@ def disassembleTime(time, addZeros=True):
 
     return res
 
+
 class Plan:
     total = 0
+
     def __init__(self, plan):
         self.activity = plan[0]
         self.desiredTime = int(plan[1])
         self.completedTime = int(plan[2])
+
     def getDesc(self):
         compTimeL = disassembleTime(self.completedTime, False)
         desTimeL = disassembleTime(self.desiredTime, False)
@@ -73,6 +80,7 @@ class MyForm(QtGui.QMainWindow):
 
         self.pTimerValue = PAUSE_DURATION
         self.paused = False
+        self.todayStatistics = defaultdict(int)
 
     def onClickDelPlan(self):
         delText = self.ui.plansList.selectedItems()[0].text()
@@ -92,13 +100,11 @@ class MyForm(QtGui.QMainWindow):
                 self.ui.plansList.takeItem(i)
                 break
 
-         
-
     def onClickAddPlan(self):
-        self.addPlan([self.ui.newPlanEdit.text(), 
-                        self.ui.minutesEdit.value()*60 + 
-                                self.ui.hoursEdit.value()*3600,
-                        0])
+        self.addPlan([self.ui.newPlanEdit.text(),
+                      self.ui.minutesEdit.value()*60 +
+                      self.ui.hoursEdit.value()*3600,
+                      0])
         self.ui.newPlanEdit.setText("")
         self.ui.minutesEdit.setValue(0)
         self.ui.hoursEdit.setValue(0)
@@ -126,8 +132,8 @@ class MyForm(QtGui.QMainWindow):
         planfile = open("TM-data", "w")
         for plan in self.plans:
             planfile.write("{0}|{1}|{2}\n".format(plan.activity,
-                                                plan.desiredTime,
-                                                plan.completedTime))
+                                                  plan.desiredTime,
+                                                  plan.completedTime))
         planfile.close()
 
     def initLog(self):
@@ -183,7 +189,7 @@ class MyForm(QtGui.QMainWindow):
         for plan in self.plans:
             if activity == plan.activity:
                 qitem = self.ui.plansList.findItems(plan.getDesc(),
-                    QtCore.Qt.MatchExactly)[0]
+                                                    QtCore.Qt.MatchExactly)[0]
                 plan.completedTime += int(timeSpent)
                 qitem.setText(plan.getDesc())
                 break
@@ -196,23 +202,29 @@ class MyForm(QtGui.QMainWindow):
         self.logFile.write(resString)
         self.logFile.flush()
 
-
     def manualActivity(self):
         self.changeActivity(self.ui.newActEdit.text())
         self.ui.newActEdit.setText("")
 
     def changeActivity(self, newAct):
-    	# Write to logs
+        # Update today statistics
+        currentAct = self.ui.curActView.toPlainText()
+        if currentAct != "":
+            self.todayStatistics[currentAct] += self.timerValue
+            self.ui.todayStatisticsDisplay.setText(collector.statisticsText(
+                                                    self.todayStatistics))
+
+        # Write to logs
         if self.ui.curActView.toPlainText() != "":
             self.logActivity()
 
-    	# Reset timer
+        # Reset timer
         self.timerValue = 0
 
         # Display new activity
         self.ui.curActView.setText(newAct)
 
-        #Write the start time of new activity to log
+        # Write the start time of new activity to log
         if self.ui.curActView.toPlainText() == "":
             return
 
@@ -221,7 +233,7 @@ class MyForm(QtGui.QMainWindow):
         if len(minutes) == 1:
             minutes = "0" + minutes
         when = str(curtime.hour) + ":" + minutes
-        self.logFile.write(when+"|");
+        self.logFile.write(when+"|")
         self.logFile.flush()
 
     def closeEvent(self, event):

@@ -103,6 +103,15 @@ class Ui_MainWindow(object):
         self.tabWidget.addTab(self.tab_2, _fromUtf8(""))
         self.tab = QtGui.QWidget()
         self.tab.setObjectName(_fromUtf8("tab"))
+        self.todayStatisticsLabel = QtGui.QLabel(self.tab)
+        self.todayStatisticsLabel.setGeometry(QtCore.QRect(130, 30, 121, 17))
+        self.todayStatisticsLabel.setObjectName(_fromUtf8("todayStatisticsLabel"))
+        self.todayStatisticsDisplay = QtGui.QLabel(self.tab)
+        self.todayStatisticsDisplay.setGeometry(QtCore.QRect(130, 50, 251, 231))
+        self.todayStatisticsDisplay.setText(_fromUtf8(""))
+        self.todayStatisticsDisplay.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignTop)
+        self.todayStatisticsDisplay.setTextInteractionFlags(QtCore.Qt.LinksAccessibleByMouse|QtCore.Qt.TextSelectableByMouse)
+        self.todayStatisticsDisplay.setObjectName(_fromUtf8("todayStatisticsDisplay"))
         self.tabWidget.addTab(self.tab, _fromUtf8(""))
         MainWindow.setCentralWidget(self.centralWidget)
         self.menuBar = QtGui.QMenuBar(MainWindow)
@@ -117,7 +126,7 @@ class Ui_MainWindow(object):
         MainWindow.setStatusBar(self.statusBar)
 
         self.retranslateUi(MainWindow)
-        self.tabWidget.setCurrentIndex(1)
+        self.tabWidget.setCurrentIndex(2)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):
@@ -132,5 +141,6 @@ class Ui_MainWindow(object):
         self.hoursPlannedLabel.setText(_translate("MainWindow", "0", None))
         self.planDelButton.setText(_translate("MainWindow", "Delete plan", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_2), _translate("MainWindow", "Plans", None))
+        self.todayStatisticsLabel.setText(_translate("MainWindow", "Today statistics:", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab), _translate("MainWindow", "Statistics", None))
 
