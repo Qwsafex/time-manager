@@ -1,5 +1,5 @@
 from collections import defaultdict
-
+import sys
 
 def collectStatistics(statFile):
     statFile.seek(0)
@@ -35,3 +35,8 @@ def statisticsText(statDict):
     else:
         statisticsText += "Total: {0} minutes".format(minutes)
     return statisticsText
+
+if __name__ == "__main__":
+    with open(sys.argv[1]) as f:
+        activities = collectStatistics(f)
+        print(statisticsText(activities))
