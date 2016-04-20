@@ -2,6 +2,7 @@ from collections import defaultdict
 
 
 def collectStatistics(statFile):
+    statFile.seek(0)
     curline = statFile.readline()
     activities = defaultdict(int)
     while curline != "":
