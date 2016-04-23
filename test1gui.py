@@ -16,13 +16,11 @@ except AttributeError:
 
 try:
     _encoding = QtGui.QApplication.UnicodeUTF8
-
     def _translate(context, text, disambig):
         return QtGui.QApplication.translate(context, text, disambig, _encoding)
 except AttributeError:
     def _translate(context, text, disambig):
         return QtGui.QApplication.translate(context, text, disambig)
-
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -109,16 +107,16 @@ class Ui_MainWindow(object):
         self.todayStatisticsLabel.setGeometry(QtCore.QRect(40, 20, 121, 17))
         self.todayStatisticsLabel.setObjectName(_fromUtf8("todayStatisticsLabel"))
         self.todayStatisticsDisplay = QtGui.QLabel(self.tab)
-        self.todayStatisticsDisplay.setGeometry(QtCore.QRect(40, 50, 251, 231))
+        self.todayStatisticsDisplay.setGeometry(QtCore.QRect(40, 50, 321, 231))
         self.todayStatisticsDisplay.setText(_fromUtf8(""))
         self.todayStatisticsDisplay.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignTop)
         self.todayStatisticsDisplay.setTextInteractionFlags(QtCore.Qt.LinksAccessibleByMouse|QtCore.Qt.TextSelectableByMouse)
         self.todayStatisticsDisplay.setObjectName(_fromUtf8("todayStatisticsDisplay"))
         self.currentPlansLabel = QtGui.QLabel(self.tab)
-        self.currentPlansLabel.setGeometry(QtCore.QRect(320, 20, 111, 17))
+        self.currentPlansLabel.setGeometry(QtCore.QRect(370, 20, 111, 17))
         self.currentPlansLabel.setObjectName(_fromUtf8("currentPlansLabel"))
         self.currentPlansDisplay = QtGui.QLabel(self.tab)
-        self.currentPlansDisplay.setGeometry(QtCore.QRect(320, 50, 231, 231))
+        self.currentPlansDisplay.setGeometry(QtCore.QRect(370, 50, 231, 231))
         self.currentPlansDisplay.setText(_fromUtf8(""))
         self.currentPlansDisplay.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignTop)
         self.currentPlansDisplay.setTextInteractionFlags(QtCore.Qt.LinksAccessibleByMouse|QtCore.Qt.TextSelectableByMouse)
@@ -137,7 +135,7 @@ class Ui_MainWindow(object):
         MainWindow.setStatusBar(self.statusBar)
 
         self.retranslateUi(MainWindow)
-        self.tabWidget.setCurrentIndex(0)
+        self.tabWidget.setCurrentIndex(2)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):

@@ -1,6 +1,7 @@
 from collections import defaultdict
 import sys
 
+
 def collectStatistics(statFile):
     statFile.seek(0)
     curline = statFile.readline()
@@ -23,10 +24,9 @@ def statisticsText(statDict):
         minutes = (value % 3600) // 60
 
         if hours > 0:
-            statisticsText += "{0} for {1} hours and {2} minutes\n".format(
-                                                    key, hours, minutes)
+            statisticsText += "{0} for {1}h {2}m\n".format(key, hours, minutes)
         else:
-            statisticsText += "{0} for {1} minutes\n".format(key, minutes)
+            statisticsText += "{0} for {1}m\n".format(key, minutes)
     hours = total // 3600
     minutes = (total % 3600) // 60
     if hours > 0:

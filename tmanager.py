@@ -52,22 +52,18 @@ class Plan:
         self.completedTime = int(plan[2])
 
     def getDesc(self, progress=1):
-        if progress==1:
+        if progress == 1:
             compTimeL = disassembleTime(self.completedTime, False)
             desTimeL = disassembleTime(self.desiredTime, False)
-            return "({0}h{1}m/{2}h{3}m) {4}".format(
-                    compTimeL[2],
-                    compTimeL[1],
-                    desTimeL[2],
-                    desTimeL[1],
-                    self.activity)
+            return "({0}h{1}m/{2}h{3}m) {4}".format(compTimeL[2],
+                                                    compTimeL[1],
+                                                    desTimeL[2],
+                                                    desTimeL[1],
+                                                    self.activity)
         else:
             timeLeft = self.desiredTime - self.completedTime
             timeL = disassembleTime(timeLeft, False)
-            return "({0}h{1}m) {2}".format(
-                    timeL[2],
-                    timeL[1],
-                    self.activity)
+            return "({0}h{1}m) {2}".format(timeL[2], timeL[1], self.activity)
 
 
 class MyForm(QtGui.QMainWindow):
@@ -92,18 +88,22 @@ class MyForm(QtGui.QMainWindow):
 
         self.todayStatistics = collector.collectStatistics(self.logFile)
         self.ui.todayStatisticsDisplay.setText(collector.statisticsText(
-                                                    self.todayStatistics))
+                                               self.todayStatistics))
         self.setPlansDisplay()
 
     def setPlansDisplay(self):
         plansText = ""
         total = 0
+        totalCompleted = 0
         for plan in self.plans:
             plansText += plan.getDesc() + "\n"
             total += plan.desiredTime
-        plansText += "Total {0} hours".format(str(total // 3600))
+            totalCompleted += plan.completedTime
+        plansText += "\n"
+        plansText += "{0} hours planned\n".format(str(total // 3600))
+        plansText += "{0} hours left\n".format(str((total -
+                                                    totalCompleted) // 3600))
         self.ui.currentPlansDisplay.setText(plansText)
-
 
     def onClickDelPlan(self):
         delText = self.ui.plansList.selectedItems()[0].text()
@@ -126,8 +126,8 @@ class MyForm(QtGui.QMainWindow):
 
     def onClickAddPlan(self):
         self.addPlan([self.ui.newPlanEdit.text(),
-                      self.ui.minutesEdit.value()*60 +
-                      self.ui.hoursEdit.value()*3600,
+                      self.ui.minutesEdit.value() * 60 +
+                      self.ui.hoursEdit.value() * 3600,
                       0])
         self.ui.newPlanEdit.setText("")
         self.ui.minutesEdit.setValue(0)
@@ -144,7 +144,6 @@ class MyForm(QtGui.QMainWindow):
         self.ui.plansList.addItem(planDesc)
         self.ui.suggestionList.addItem(newPlan.activity)
         self.setPlansDisplay()
-
 
     def readPlans(self):
         planfile = open("TM-data", "a+")
@@ -169,7 +168,7 @@ class MyForm(QtGui.QMainWindow):
 
         # TODO: "format".format()
         curdate = year + "." + curdate[1] + "." + curdate[2]
-        self.logFile = open(curdate+"-TM-log.txt", "a+")
+        self.logFile = open(curdate + "-TM-log.txt", "a+")
 
     def initTimer(self):
         self.timerValue = 0
@@ -212,14 +211,13 @@ class MyForm(QtGui.QMainWindow):
             if activity == plan.activity:
                 qitem = self.ui.plansList.findItems(plan.getDesc(),
                                                     QtCore.Qt.MatchExactly)[0]
-                plan.completedTime += int(timeSpent)
                 qitem.setText(plan.getDesc())
                 break
 
         humanReadable = "{0} for {1} minutes {2} seconds".format(
-                    self.ui.curActView.toPlainText(),
-                    str(self.timerValue // 60),
-                    str(self.timerValue % 60))
+            self.ui.curActView.toPlainText(),
+            str(self.timerValue // 60),
+            str(self.timerValue % 60))
         resString = "{0}|{1}|{2}\n".format(humanReadable, activity, timeSpent)
         self.logFile.write(resString)
         self.logFile.flush()
@@ -234,7 +232,12 @@ class MyForm(QtGui.QMainWindow):
         if currentAct != "":
             self.todayStatistics[currentAct] += self.timerValue
             self.ui.todayStatisticsDisplay.setText(collector.statisticsText(
-                                                    self.todayStatistics))
+                                                   self.todayStatistics))
+
+        # Update plan progress
+        for plan in self.plans:
+            if currentAct == plan.activity:
+                plan.completedTime += int(self.timerValue)
 
         # Write to logs
         if self.ui.curActView.toPlainText() != "":
@@ -255,7 +258,7 @@ class MyForm(QtGui.QMainWindow):
         if len(minutes) == 1:
             minutes = "0" + minutes
         when = str(curtime.hour) + ":" + minutes
-        self.logFile.write(when+"|")
+        self.logFile.write(when + "|")
         self.logFile.flush()
 
     def closeEvent(self, event):
